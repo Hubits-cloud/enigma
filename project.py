@@ -1,4 +1,4 @@
-# TODO everything works, now make input and output
+import sys
 
 from keyboard import Keyboard
 from plugboard import Plugboard
@@ -9,80 +9,87 @@ from enigma import Enigma
 # historicly accurate enigma components taken from wikipedia: https://en.wikipedia.org/wiki/Enigma_rotor_details
 
 
-#plugboard settings. TODO: give user acces to change plugboard settings
-#plug = Plugboard(["AB", "CD", "EF"])
-
-# define Enigma machine. TODO: allow user to input own combination of rotors and reflectors
-#ENIGMA = Enigma(B,IV,II,I,plug,keyboard)
-
 def main():
 
+    # get the user input
     message = input("Type message to encipher: ").strip().upper()
+    plug_input = input("Please type plugboard connection with a space in between. E.g: AB CD EF: ").upper().strip()
+    reflector_input = input("Please chose between reflector A, B, & C: ").upper().strip()
+    rotorL_input = input("Please chose between rotor I, II, III, IV, & V for the left rotor: ").upper().strip()
+    rotorM_input = input("Please chose between rotor I, II, III, IV, & V for the middle rotor: ").upper().strip()
+    rotorR_input = input("Please chose between rotor I, II, III, IV, & V for the right rotor: ").upper().strip()
+    key_input = input("Please type a 3 char keyword, you may use any letter of the english alphabet: ").upper().strip()
+    ring_input = input("Please input three ints between 1 & 26: ").strip()
+
+    # prepare an empty var for the ciphered message
     ciphered_message = ""
 
+    #prepares the functions and classes
     keyboard = Keyboard()
-    plug = Plugboard(get_plugboard())
-    reflector = get_reflector()
-    left_rotor = get_rotor_left()
-    middle_rotor = get_rotor_middle()
-    right_rotor = get_rotor_right()
-    key = get_key()
-    rings = get_rings()
+    plug = Plugboard(get_plugboard(plug_input))
+    reflector = get_reflector(reflector_input)
+    left_rotor = get_rotor_left(rotorL_input)
+    middle_rotor = get_rotor_middle(rotorM_input)
+    right_rotor = get_rotor_right(rotorR_input)
+    key = get_key(key_input)
+    rings = get_rings(ring_input)
 
+    # prepares the cipher with the given parameters
     ENIGMA = Enigma(reflector, left_rotor, middle_rotor, right_rotor, plug, keyboard)
+    # prepares the keys and rings for the cipher
     ENIGMA.set_key(key)
     ENIGMA.set_rings(rings)
 
+    # goes through each letter in the message and enciphers them
     for letter in message:
         ciphered_message = ciphered_message + ENIGMA.encipher(letter)
     print(ciphered_message)
-    # ENIGMA = Enigma(B,IV,II,I,plug,keyboard)
-    #ENIGMA.set_key("CAT")
 
-    #ENIGMA.set_rings((5,26,2))
-
-    #message = "TESTINGTESTINGTESTINGTESTING"
-    #cipher_text = ""
-    #for letter in message:
-        #cipher_text = cipher_text + ENIGMA.encipher(letter)
-    #print(cipher_text)
-
-def get_plugboard():
+def get_plugboard(s):
     while True:
-        plug_txt = input("Please type plugboard connection with a space in between. E.g: AB CD EF: ").upper().strip()
+        # get the input
+        plug_txt = s
         plug = plug_txt.split()
+        # gets the length of the input after removing spaces
         length = len(plug_txt.replace(" ",""))
-        if len(plug) != length / 2:
-            print("ERR only input two chars per pair")
-            continue
 
+        # checks if the length of plug is half the length of length, because plug is only supposed to be 2 chars
+        if len(plug) != length / 2:
+            sys.exit("ERR only input two chars per pair")
+            
+
+        # splits the plug into single chars and removes spaces
         letters = [x for x in plug_txt]
         letters = [x.strip(' ') for x in letters]
         letters[:] = [x for x in letters if x]
         for x in letters:
 
             if letters.count(x) != 1:
-                print ("ERR only use one instance per char")
-                continue
+                sys.exit ("ERR only use one instance per char")
+                
 
             elif isfloat(x):
-                print("ERR only input chars")
-                continue
+                sys.exit("ERR only input chars")
+                
 
             else:
                 return plug
     
         
-def get_reflector():
+def get_reflector(s):
+    # historicly accurate enigma components taken from wikipedia: https://en.wikipedia.org/wiki/Enigma_rotor_details
     A = Reflect("EJMZALYXVBWFCRQUONTSPIKHGD")
     B = Reflect("YRUHQSLDPXNGOKMIEBFZCWVJAT")
     C = Reflect("FVPJIAOYEDRZXWGCTKUQSBNMHL")
 
     while True:
-        usr_input = input("Please chose between reflector A, B, & C: ").upper().strip()
+        # gets the user input
+        usr_input = s
+
+        # ensures that either A, B, or C was inputtet
         if usr_input != "A" and usr_input != "B" and usr_input !="C":
-            print("ERR please chose between A, B, & C")
-            continue
+            sys.exit("ERR please chose between A, B, & C")
+            
 
         elif usr_input == "A":
             return A
@@ -94,11 +101,12 @@ def get_reflector():
             return C
         
         else:
-            print("ERR unknown error")
-            continue
+            sys.exit("ERR unknown error")
+            
 
 
-def get_rotor_left():
+def get_rotor_left(s):
+    # historicly accurate enigma components taken from wikipedia: https://en.wikipedia.org/wiki/Enigma_rotor_details
     I = Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q")
     II = Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "E")
     III = Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "V")
@@ -106,7 +114,8 @@ def get_rotor_left():
     V = Rotor("VZBRGITYUPSDNHLXAWMJQOFECK", "Z")
 
     while True:
-        usr_input = input("Please chose between rotor I, II, III, IV, & V for the left rotor: ").upper().strip()
+        # get the input of the user
+        usr_input = s
 
         if usr_input == "I" or usr_input == "1" or usr_input == "ONE":
             return I
@@ -124,14 +133,15 @@ def get_rotor_left():
             return V
         
         elif usr_input != "I" and usr_input != "II" and usr_input !="III" and usr_input !="IV" and usr_input !="V":
-            print("ERR please chose between I, II, III, IV, & V")
-            continue
+            sys.exit("ERR please chose between I, II, III, IV, & V")
+            
         
         else:
-            print("ERR unknown error")
-            continue
+            sys.exit("ERR unknown error")
+            
 
-def get_rotor_middle():
+def get_rotor_middle(s):
+    # historicly accurate enigma components taken from wikipedia: https://en.wikipedia.org/wiki/Enigma_rotor_details
     I = Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q")
     II = Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "E")
     III = Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "V")
@@ -139,7 +149,8 @@ def get_rotor_middle():
     V = Rotor("VZBRGITYUPSDNHLXAWMJQOFECK", "Z")
 
     while True:
-        usr_input = input("Please chose between rotor I, II, III, IV, & V for the middle rotor: ").upper().strip()
+        # get the input of the user
+        usr_input = s
 
         if usr_input == "I" or usr_input == "1" or usr_input == "ONE":
             return I
@@ -157,14 +168,15 @@ def get_rotor_middle():
             return V
         
         elif usr_input != "I" and usr_input != "II" and usr_input !="III" and usr_input !="IV" and usr_input !="V":
-            print("ERR please chose between I, II, III, IV, & V")
-            continue
+            sys.exit("ERR please chose between I, II, III, IV, & V")
+            
         
         else:
-            print("ERR unknown error")
-            continue
+            sys.exit("ERR unknown error")
+            
 
-def get_rotor_right():
+def get_rotor_right(s):
+    # historicly accurate enigma components taken from wikipedia: https://en.wikipedia.org/wiki/Enigma_rotor_details
     I = Rotor("EKMFLGDQVZNTOWYHXUSPAIBRCJ", "Q")
     II = Rotor("AJDKSIRUXBLHWTMCQGZNPYFVOE", "E")
     III = Rotor("BDFHJLCPRTXVZNYEIWGAKMUSQO", "V")
@@ -172,7 +184,8 @@ def get_rotor_right():
     V = Rotor("VZBRGITYUPSDNHLXAWMJQOFECK", "Z")
 
     while True:
-        usr_input = input("Please chose between rotor I, II, III, IV, & V for the right rotor: ").upper().strip()
+        # get the input of the user
+        usr_input = s
 
         if usr_input == "I" or usr_input == "1" or usr_input == "ONE":
             return I
@@ -190,58 +203,58 @@ def get_rotor_right():
             return V
         
         elif usr_input != "I" and usr_input != "II" and usr_input !="III" and usr_input !="IV" and usr_input !="V":
-            print("ERR please chose between I, II, III, IV, & V")
-            continue
+            sys.exit("ERR please chose between I, II, III, IV, & V")
+            
         
         else:
-            print("ERR unknown error")
-            continue
+            sys.exit("ERR unknown error")
+            
 
-def get_key():
+def get_key(s):
     while True:
-        usr_input = input("Please type a 3 char keyword, you may use any letter of the english alphabet: ").upper().strip()
+        usr_input = s
         usr_input = usr_input.replace(" ", "")
         if len(usr_input) != 3:
-            print("ERR key must be three chars long")
-            continue
+            sys.exit("ERR key must be three chars long")
+            
 
         for letter in usr_input:
             if letter not in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
-                print("ERR char is not a letter in the english alphabet")
-                continue
+                sys.exit("ERR char is not a letter in the english alphabet")
+                
 
         key_word = usr_input
         return key_word
 
-def get_rings():
+def get_rings(s):
     while True:
-        usr_input = input("Please input three ints between 1 & 26: ").strip()
+        usr_input = s
         
         try:
             a, b, c = usr_input.split()
         except ValueError:
-            print ("Please type three different ints")
-            continue
+            sys.exit ("Please type three different ints")
+            
 
         if len(a) + len(b) + len(c) > 6:
-            print("ERR please choose between 1 and 26")
-            continue
+            sys.exit("ERR please choose between 1 and 26")
+            
 
         if a.isnumeric() == False or b.isnumeric() == False or c.isnumeric() == False:
-            print("ERR non int input")
-            continue
+            sys.exit("ERR non int input")
+            
 
         try:
             a = int(a)
             b = int(b)
             c = int(c)
         except:
-            print("ERR non int input")
-            continue
+            sys.exit("ERR non int input")
+            
 
         if a > 26 or b > 26 or c > 26:
-            print("ERR please choose between 1 and 26")
-            continue
+            sys.exit("ERR please choose between 1 and 26")
+            
 
         ring_tuple = (a, b, c)
         return ring_tuple
